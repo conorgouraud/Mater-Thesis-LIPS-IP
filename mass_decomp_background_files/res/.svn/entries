@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wc-entries
+   xmlns="svn:">
+<entry
+   committed-rev="5540"
+   name=""
+   committed-date="2007-07-12T14:58:23.933873Z"
+   url="https://bio.informatik.uni-jena.de/svnrep/trunk/projects/imslib/res"
+   last-author="apervukh"
+   kind="dir"
+   uuid="d05f68b8-8908-0410-9423-8f080109485a"
+   repos="https://bio.informatik.uni-jena.de/svnrep"
+   revision="6894"/>
+<entry
+   committed-rev="2466"
+   name="atom-mono.masses"
+   text-time="2007-10-16T16:07:11.000000Z"
+   committed-date="2005-09-29T09:39:22.000000Z"
+   checksum="d8b616c725dc860f847d8fd14e6522a0"
+   last-author="apervukh"
+   kind="file"
+   prop-time="2007-10-16T16:07:10.000000Z"/>
+<entry
+   committed-rev="5540"
+   name="atom-average.masses"
+   text-time="2007-10-16T16:07:11.000000Z"
+   committed-date="2007-07-12T14:58:23.933873Z"
+   checksum="a87fd5c31f2a4f27cf4374b1783f2ec8"
+   last-author="apervukh"
+   kind="file"
+   prop-time="2007-10-16T16:07:10.000000Z"/>
+<entry
+   committed-rev="2466"
+   name="dna-mono.masses"
+   text-time="2007-10-16T16:07:11.000000Z"
+   committed-date="2005-09-29T09:39:22.000000Z"
+   checksum="127207cb68232bd149310e2e5f2e473e"
+   last-author="apervukh"
+   kind="file"
+   prop-time="2007-10-16T16:07:10.000000Z"/>
+<entry
+   committed-rev="2466"
+   name="dna-average.masses"
+   text-time="2007-10-16T16:07:11.000000Z"
+   committed-date="2005-09-29T09:39:22.000000Z"
+   checksum="82bc122db65fa0750ea661f53651a009"
+   last-author="apervukh"
+   kind="file"
+   prop-time="2007-10-16T16:07:11.000000Z"/>
+<entry
+   committed-rev="2465"
+   name="amino-acid-mono.masses-frequencies"
+   text-time="2007-10-16T16:07:12.000000Z"
+   committed-date="2005-09-29T09:37:32.000000Z"
+   checksum="9445cd0be79fdad9670847453a41ca13"
+   last-author="apervukh"
+   kind="file"
+   prop-time="2007-10-16T16:07:11.000000Z"/>
+<entry
+   committed-rev="2465"
+   name="amino-acid-average.masses-frequencies"
+   text-time="2007-10-16T16:07:12.000000Z"
+   committed-date="2005-09-29T09:37:32.000000Z"
+   checksum="fb3096a47ebee0618613e3fee8813a22"
+   last-author="apervukh"
+   kind="file"
+   prop-time="2007-10-16T16:07:11.000000Z"/>
+</wc-entries>

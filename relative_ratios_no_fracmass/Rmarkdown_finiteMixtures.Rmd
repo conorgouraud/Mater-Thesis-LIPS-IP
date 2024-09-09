@@ -1,0 +1,678 @@
+---
+title: "Finite mixture models for Relative Ratios - version 2"
+author: "Jürgen Claesen"
+date: "2024-05-01"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
+
+library(plotly)
+library(ggplot2)
+library(ggpubr)
+library(flexmix)
+```
+
+## Introduction
+
+```{r preparation}
+setwd("C:/Users/jurgen/Documents/lipidomics")
+
+database <- read.csv(file="./Lipid_Maps_and_SWISS_lipids.csv", header=TRUE)
+#reduced_database <- database[-which(database$F!=0 | database$I!=0),]
+reduced_database <- database
+reduced_database$Halogens <- reduced_database$Br + reduced_database$Cl
+reduced_database$decimal <- reduced_database$mass1 - floor(reduced_database$mass1)
+reduced_database <- reduced_database[order(reduced_database$mass1),]
+reduced_database$m0 <- reduced_database$mass1/1000
+
+reduced_noS <- subset(reduced_database, S==0)
+reduced_S <- subset(reduced_database, S!=0)
+```
+
+## Fitting model
+
+We assume here that the distribution of Relative Ratios is not a univariate distribution, but a mixture of an unknown number of distributions. As a consequence, we will fit finite mixture models to determine the association between the (re-scaled) mono-isotopic mass and the relative ratios. Additionally, we will assume that the probability to belong to a certain component of the mixture model is a function of the mono-isotopic mass, the mass difference between the mono-isotopic mass and the second peak, the mass difference between the third and second peak, and the fractional mass (referred to as a concomitant model). The models are estimated with the Expectation-Maximization algorithm.
+
+### Lipids without S-atoms
+
+#### Relative Ratio 21
+Here, we assume that the number of components is three. However, models with smaller (absolute) BIC-values (i.e., better model fits) can be found, indicating that the number of components should be different from three. We also assume that the relation between the mono-isotopic mass and Relative Ratio 21 is not linear, but quadratic.
+
+Despite the fact that the mixture model without the concomitant model lead to a smaller (absolute) BIC-value, the concomitant model will not be removed. The main reason for this is that it allows us to express the probability to belong to a component as a function of observable characteristics of the aggregated isotope distribution.
+
+```{r RR21, echo=FALSE}
+if(!file.exists(file="resultRR21.noS.rds")){
+  
+  fModel.noS <- flexmix(RR21~poly(m0,2), k=3, data=reduced_noS, concomitant=FLXPmultinom(~m0 + m32))
+
+  refittedModel <- refit(fModel.noS)
+  saveRDS(object=fModel.noS, file="resultRR21.noS.rds")
+
+  }else{
+  
+  fModel.noS <- readRDS("resultRR21.noS.rds")
+  refittedModel <- refit(fModel.noS)
+}
+
+summary(refittedModel, which = "model")
+summary(refittedModel, which = "concomitant")
+```
+
+```{r RR21 prediction, echo=FALSE}
+pred <- predict(fModel.noS, reduced_noS)
+clust <- clusters(fModel.noS,reduced_noS)
+result <- cbind(reduced_noS,data.frame(pred),data.frame(clust))
+
+MSE.1 <- mean((result$RR21-result$Comp.1)^2)
+MSE.2 <- mean((result$RR21-result$Comp.2)^2)
+MSE.3 <- mean((result$RR21-result$Comp.3)^2)
+
+n1 <- length(which(result$clust==1))
+n2 <- length(which(result$clust==2))
+n3 <- length(which(result$clust==3))  
+
+avgMass <- mean(reduced_noS$m0)
+predMassDiff <- (reduced_noS$m0 - avgMass)^2
+sumDiff <- sum((reduced_noS$m0 - avgMass)^2)
+ 
+stdErr.1 <- sqrt(MSE.1*(1 + 1/n1 + predMassDiff/sumDiff))
+stdErr.2 <- sqrt(MSE.2*(1 + 1/n2 + predMassDiff/sumDiff))
+stdErr.3 <- sqrt(MSE.3*(1 + 1/n3 + predMassDiff/sumDiff))
+
+predAggregate <- predict(fModel.noS, newdata = reduced_noS, aggregate = TRUE)[[1]][,1]
+result$aggregate <- predAggregate
+MSE.aggregate <- mean((result$RR21-result$aggregate)^2)
+n.a <- length(result$clust)
+avgMass.aggregate <- mean(reduced_noS$m0)
+predMassDiff.aggregate <- (result$m0 - avgMass.aggregate)^2
+sumDiff.aggregate <- sum((reduced_noS$m0 - avgMass.aggregate)^2)
+stdErr.aggregate <- sqrt(MSE.aggregate*(1 + 1/n.a + predMassDiff.aggregate/sumDiff.aggregate))
+result$lower.aggregate <- result$aggregate-1.96*stdErr.aggregate
+result$upper.aggregate <- result$aggregate+1.96*stdErr.aggregate
+
+idSel <- seq(from=50, to=62938, by=200)
+predSel <- predict(fModel.noS, newdata = reduced_noS[idSel,], aggregate = TRUE)[[1]][,1]
+predMassDiff.sel <- (reduced_noS$m0[idSel] - avgMass.aggregate)^2
+stdErr.sel <- sqrt(MSE.aggregate*(1 + 1/n.a + predMassDiff.sel/sumDiff.aggregate))
+``` 
+
+```{r plots, echo=FALSE}
+plot(reduced_noS$mass1, reduced_noS$RR21, type="n", xlab="Mono-isotopic mass", ylab="Relative Ratio 21", main="Without S-atoms")
+points(reduced_noS$mass1[result$clust==1], result$RR21[result$clust==1], col="pink", pch=16, cex=0.5)
+points(reduced_noS$mass1[result$clust==2], result$RR21[result$clust==2], col="lightblue", pch=16, cex=0.5)
+points(reduced_noS$mass1[result$clust==3], result$RR21[result$clust==3], col="lightgreen", pch=16, cex=0.5)
+lines(reduced_noS$mass1, pred$Comp.1, lwd=2, col="red")
+lines(reduced_noS$mass1, pred$Comp.2, lwd=2, col="blue")
+lines(reduced_noS$mass1, pred$Comp.3, lwd=2, col="green")
+
+lines(reduced_noS$mass1, pred$Comp.1-1.96*stdErr.1, lwd=1, lty=2, col="red")
+lines(reduced_noS$mass1, pred$Comp.1+1.96*stdErr.1, lwd=1, lty=2, col="red")
+lines(reduced_noS$mass1, pred$Comp.2-1.96*stdErr.2, lwd=1, lty=2, col="blue")
+lines(reduced_noS$mass1, pred$Comp.2+1.96*stdErr.2, lwd=1, lty=2, col="blue")
+lines(reduced_noS$mass1, pred$Comp.3-1.96*stdErr.3, lwd=1, lty=2, col="green")
+lines(reduced_noS$mass1, pred$Comp.3+1.96*stdErr.3, lwd=1, lty=2, col="green")
+
+points(reduced_noS$mass1[idSel], reduced_noS$RR21[idSel], pch=16, cex=.5)
+lines(reduced_noS$mass1[sort(idSel)], predSel, col=1, lwd=.5)
+lines(reduced_noS$mass1[sort(idSel)], predSel-1.96*stdErr.sel, col=1, lty=2, lwd=.5)
+lines(reduced_noS$mass1[sort(idSel)], predSel+1.96*stdErr.sel, col=1, lty=2, lwd=.5)
+```
+
+#### Relative Ratio 32
+The presence of halogens is making it difficult to fit a (finite mixture) model that accurately models the relation between the mono-isotopic mass and relative ratio 32. Therefore, we have chosen to remove the lipids with halogens. A separate model for lipids with halogens will be considered if deemed necessary (i.e., if RR21 is not sufficient)
+
+```{r RR32 model, echo=FALSE}
+if(!file.exists("resultRR32.noS.rds")){
+
+  reduced_noS_noX <- subset(reduced_database, Halogens==0 & S==0)
+  
+  fModel32.noS <- flexmix(RR32~ poly(m0,2), k=3, data=reduced_noS_noX, concomitant=FLXPmultinom(~ m0 + m32))
+
+  refittedModel32.noS <- refit(fModel32.noS)
+  saveRDS(file="resultRR32.noS.rds", object = fModel32.noS)
+
+}else{
+
+  fModel32.noS <- readRDS("resultRR32.noS.rds")
+  refittedModel32.noS <- refit(fModel32.noS)
+  reduced_noS_noX <- subset(reduced_database, Halogens==0 & S==0)
+  
+}
+
+summary(refittedModel32.noS, which = "model")
+summary(refittedModel32.noS, which = "concomitant")
+```
+
+```{r RR32 without S prediction, echo=FALSE}
+pred32 <- predict(fModel32.noS, reduced_noS_noX)
+clust32 <- clusters(fModel32.noS, reduced_noS_noX)
+result32 <- cbind(reduced_noS_noX, data.frame(pred32), data.frame(clust32))
+
+MSE32.1 <- mean((result32$RR32-result32$Comp.1)^2)
+MSE32.2 <- mean((result32$RR32-result32$Comp.2)^2)
+MSE32.3 <- mean((result32$RR32-result32$Comp.3)^2)
+
+n1 <- length(which(result32$clust32==1))
+n2 <- length(which(result32$clust32==2))
+n3 <- length(which(result32$clust32==3))
+
+avgMass <- mean(reduced_noS_noX$m0)
+predMassDiff <- (reduced_noS_noX$m0 - avgMass)^2
+sumDiff <- sum((reduced_noS_noX$m0 - avgMass)^2)
+
+stdErr32.1 <- sqrt(MSE32.1*(1 + 1/n1 + predMassDiff/sumDiff))
+stdErr32.2 <- sqrt(MSE32.2*(1 + 1/n2 + predMassDiff/sumDiff))
+stdErr32.3 <- sqrt(MSE32.3*(1 + 1/n3 + predMassDiff/sumDiff))
+
+predAggregate <- predict(fModel32.noS, newdata = reduced_noS_noX, aggregate = TRUE)[[1]][,1]
+result32$aggregate <- predAggregate
+MSE32.aggregate <- mean((result32$RR32-result32$aggregate)^2)
+n.a <- length(reduced_noS_noX$m0)
+avgMass.aggregate <- mean(reduced_noS_noX$m0)
+predMassDiff.aggregate <- (reduced_noS_noX$m0 - avgMass.aggregate)^2
+sumDiff.aggregate <- sum((reduced_noS_noX$m0 - avgMass.aggregate)^2)
+stdErr32.aggregate <- sqrt(MSE32.aggregate*(1 + 1/n.a + predMassDiff.aggregate/sumDiff.aggregate))
+result32$lower.aggregate <- result32$aggregate-1.96*stdErr32.aggregate
+result32$upper.aggregate <- result32$aggregate+1.96*stdErr32.aggregate
+
+idSel <- sort(seq(from=1, to=length(reduced_noS_noX$m0), by=200))
+predSel <- predict(fModel32.noS, newdata = reduced_noS_noX[idSel,], aggregate = TRUE)[[1]][,1]
+predMassDiff.sel <- (reduced_noS_noX$m0[idSel] - avgMass.aggregate)^2
+stdErr32.sel <- sqrt(MSE32.aggregate*(1 + 1/n.a + predMassDiff.sel/sumDiff.aggregate))
+```
+
+```{r RR32 without S plots, echo=FALSE}
+plot(reduced_noS_noX$mass1, reduced_noS_noX$RR32, type="n", xlab="Mono-isotopic mass", ylab="Relative Ratio 32", main="Without S-atoms and without Halogens")
+points(reduced_noS_noX$mass1[result32$clust32==1], result32$RR32[result32$clust32==1], col="pink", pch=16, cex=0.5)
+points(reduced_noS_noX$mass1[result32$clust32==2], result32$RR32[result32$clust32==2], col="lightblue", pch=16, cex=0.5)
+points(reduced_noS_noX$mass1[result32$clust32==3], result32$RR32[result32$clust32==3], col="lightgreen", pch=16, cex=0.5)
+
+lines(reduced_noS_noX$mass1, pred32$Comp.1, lwd=2, col="red")
+lines(reduced_noS_noX$mass1, pred32$Comp.2, lwd=2, col="blue")
+lines(reduced_noS_noX$mass1, pred32$Comp.3, lwd=2, col="green")
+lines(reduced_noS_noX$mass1, pred32$Comp.1-1.96*stdErr32.1, lwd=1, lty=2, col="red")
+lines(reduced_noS_noX$mass1, pred32$Comp.1+1.96*stdErr32.1, lwd=1, lty=2, col="red")
+lines(reduced_noS_noX$mass1, pred32$Comp.2-1.96*stdErr32.2, lwd=1, lty=2, col="blue")
+lines(reduced_noS_noX$mass1, pred32$Comp.2+1.96*stdErr32.2, lwd=1, lty=2, col="blue")
+lines(reduced_noS_noX$mass1, pred32$Comp.3-1.96*stdErr32.3, lwd=1, lty=2, col="green")
+lines(reduced_noS_noX$mass1, pred32$Comp.3+1.96*stdErr32.3, lwd=1, lty=2, col="green")
+
+points(reduced_noS_noX$mass1[idSel], reduced_noS_noX$RR32[idSel], pch=16, cex=.5)
+lines(reduced_noS_noX$mass1[sort(idSel)], predSel, col=1, lwd=.5)
+lines(reduced_noS_noX$mass1[sort(idSel)], predSel-1.96*stdErr32.sel, col=1, lty=2, lwd=.5)
+lines(reduced_noS_noX$mass1[sort(idSel)], predSel+1.96*stdErr32.sel, col=1, lty=2, lwd=.5)
+```
+
+#### Relative Ratio 43
+Here, we also assumed that the relation between the mono-isotopic mass and Relative Ratio 43 is not linear, but quadratic. Due to singularity issues we also removed the mass differences (m21 and m32) from the concomitant model. Additionally, it was assumed that there are two components, as a model with three components returned an empty component.
+
+```{r RR43, echo=FALSE}
+if(!file.exists("resultRR43.noS.rds")){
+
+  fModel43.noS <- flexmix(RR43~poly(m0,2), k=2, data=reduced_noS, concomitant=FLXPmultinom(~ m0 + m32))
+
+  refittedModel43 <- refit(fModel43.noS)
+  saveRDS(file="resultRR43.noS.rds", object = fModel43.noS) 
+
+}else{
+  fModel43.noS <- readRDS("resultRR43.noS.rds")
+  refittedModel43 <- refit(fModel43.noS)
+}
+ 
+summary(refittedModel43, which = "model")
+summary(refittedModel43, which = "concomitant")
+```
+
+```{r RR43 prediction, echo=FALSE}
+pred43 <- predict(fModel43.noS, reduced_noS)
+clust43 <- clusters(fModel43.noS,reduced_noS)
+result43 <- cbind(reduced_noS,data.frame(pred43),data.frame(clust43))
+
+MSE43.1 <- mean((result43$RR43-result43$Comp.1)^2)
+MSE43.2 <- mean((result43$RR43-result43$Comp.2)^2)
+
+n1 <- length(which(result43$clust==1))
+n2 <- length(which(result43$clust==2))
+
+avgMass <- mean(reduced_noS$m0)
+predMassDiff <- (reduced_noS$m0 - avgMass)^2
+sumDiff <- sum((reduced_noS$m0 - avgMass)^2)
+ 
+stdErr43.1 <- sqrt(MSE43.1*(1 + 1/n1 + predMassDiff/sumDiff))
+stdErr43.2 <- sqrt(MSE43.2*(1 + 1/n2 + predMassDiff/sumDiff))
+
+predAggregate43 <- predict(fModel43.noS, newdata = reduced_noS, aggregate = TRUE)[[1]][,1]
+result43$aggregate <- predAggregate43
+MSE43.aggregate <- mean((result43$RR43-result43$aggregate)^2)
+n.a <- length(result43$clust)
+avgMass.aggregate <- mean(reduced_noS$m0)
+predMassDiff.aggregate <- (result43$m0 - avgMass.aggregate)^2
+sumDiff.aggregate <- sum((reduced_noS$m0 - avgMass.aggregate)^2)
+stdErr43.aggregate <- sqrt(MSE43.aggregate*(1 + 1/n.a + predMassDiff.aggregate/sumDiff.aggregate))
+result43$lower.aggregate <- result43$aggregate-1.96*stdErr43.aggregate
+result43$upper.aggregate <- result43$aggregate+1.96*stdErr43.aggregate
+
+idSel <- seq(from=50, to=62938, by=200)
+predSel <- predict(fModel43.noS, newdata = reduced_noS[idSel,], aggregate = TRUE)[[1]][,1]
+predMassDiff.sel <- (reduced_noS$m0[idSel] - avgMass.aggregate)^2
+stdErr43.sel <- sqrt(MSE43.aggregate*(1 + 1/n.a + predMassDiff.sel/sumDiff.aggregate))
+``` 
+
+```{r RR43 plots, echo=FALSE}
+plot(reduced_noS$mass1, reduced_noS$RR43, type="n", xlab="Mono-isotopic mass", ylab="Relative Ratio 43", main="Without S-atoms")
+points(reduced_noS$mass1[result43$clust43==1], result43$RR43[result43$clust43==1], col="pink", pch=16, cex=0.5)
+points(reduced_noS$mass1[result43$clust43==2], result43$RR43[result43$clust43==2], col="lightblue", pch=16, cex=0.5)
+
+lines(reduced_noS$mass1, pred43$Comp.1, lwd=2, col="red")
+lines(reduced_noS$mass1, pred43$Comp.2, lwd=2, col="blue")
+
+lines(reduced_noS$mass1, pred43$Comp.1-1.96*stdErr43.1, lwd=1, lty=2, col="red")
+lines(reduced_noS$mass1, pred43$Comp.1+1.96*stdErr43.1, lwd=1, lty=2, col="red")
+lines(reduced_noS$mass1, pred43$Comp.2-1.96*stdErr43.2, lwd=1, lty=2, col="blue")
+lines(reduced_noS$mass1, pred43$Comp.2+1.96*stdErr43.2, lwd=1, lty=2, col="blue")
+
+points(reduced_noS$mass1[idSel], reduced_noS$RR43[idSel], pch=16, cex=.5)
+lines(reduced_noS$mass1[sort(idSel)], predSel, col=1, lwd=.5)
+lines(reduced_noS$mass1[sort(idSel)], predSel-1.96*stdErr43.sel, col=1, lty=2, lwd=.5)
+lines(reduced_noS$mass1[sort(idSel)], predSel+1.96*stdErr43.sel, col=1, lty=2, lwd=.5)
+```
+
+#### Relative Ratio 54
+```{r RR54 without S, echo=FALSE}
+if(!file.exists("resultRR54.noS.rds")){
+  fModel54.noS_noX <- flexmix(RR54~poly(m0,2), k=2, data=reduced_noS_noX, concomitant=FLXPmultinom(~ m0 + m21 + m32))
+
+  refittedModel54.noS_noX <- refit(fModel54.noS_noX)
+  saveRDS(file="resultRR54.noS.rds", object = fModel54.noS_noX) 
+  
+}else{
+  fModel54.noS_noX <- readRDS("resultRR54.noS.rds")
+  refittedModel54.noS_noX <- refit(fModel54.noS_noX)
+  
+}
+  
+summary(refittedModel54.noS_noX, which = "model")
+summary(refittedModel54.noS_noX, which = "concomitant")
+
+```
+
+```{r RR54 prediction, echo=FALSE}
+pred54 <- predict(fModel54.noS_noX, reduced_noS_noX)
+clust54 <- clusters(fModel54.noS_noX,reduced_noS_noX)
+result54 <- cbind(reduced_noS_noX,data.frame(pred54),data.frame(clust54))
+
+MSE54.1 <- mean((result54$RR54-result54$Comp.1)^2)
+MSE54.2 <- mean((result54$RR54-result54$Comp.2)^2)
+MSE54.3 <- mean((result54$RR54-result54$Comp.3)^2)
+
+n1 <- length(which(result54$clust==1))
+n2 <- length(which(result54$clust==2))
+n3 <- length(which(result54$clust==3))
+
+avgMass <- mean(reduced_noS_noX$m0)
+predMassDiff <- (reduced_noS_noX$m0 - avgMass)^2
+sumDiff <- sum((reduced_noS_noX$m0 - avgMass)^2)
+ 
+stdErr54.1 <- sqrt(MSE54.1*(1 + 1/n1 + predMassDiff/sumDiff))
+stdErr54.2 <- sqrt(MSE54.2*(1 + 1/n2 + predMassDiff/sumDiff))
+stdErr54.3 <- sqrt(MSE54.3*(1 + 1/n3 + predMassDiff/sumDiff))
+
+predAggregate54 <- predict(fModel54.noS_noX, newdata = reduced_noS_noX, aggregate = TRUE)[[1]][,1]
+result54$aggregate <- predAggregate54
+MSE54.aggregate <- mean((result54$RR54-result54$aggregate)^2)
+n.a <- length(result54$clust)
+avgMass.aggregate <- mean(reduced_noS_noX$m0)
+predMassDiff.aggregate <- (result54$m0 - avgMass.aggregate)^2
+sumDiff.aggregate <- sum((reduced_noS_noX$m0 - avgMass.aggregate)^2)
+stdErr54.aggregate <- sqrt(MSE54.aggregate*(1 + 1/n.a + predMassDiff.aggregate/sumDiff.aggregate))
+result54$lower.aggregate <- result54$aggregate-1.96*stdErr54.aggregate
+result54$upper.aggregate <- result54$aggregate+1.96*stdErr54.aggregate
+
+idSel <- seq(from=50, to=62938, by=200)
+predSel <- predict(fModel54.noS_noX, newdata = reduced_noS_noX[idSel,], aggregate = TRUE)[[1]][,1]
+predMassDiff.sel <- (reduced_noS_noX$m0[idSel] - avgMass.aggregate)^2
+stdErr54.sel <- sqrt(MSE54.aggregate*(1 + 1/n.a + predMassDiff.sel/sumDiff.aggregate))
+``` 
+
+```{r RR54 plots, echo=FALSE}
+plot(reduced_noS_noX$mass1, reduced_noS_noX$RR54, type="n", xlab="Mono-isotopic mass", ylab="Relative Ratio 54", main="Without S-atoms and Halogens")
+points(reduced_noS_noX$mass1[result54$clust54==1], result54$RR54[result54$clust54==1], col="pink", pch=16, cex=0.5)
+points(reduced_noS_noX$mass1[result54$clust54==2], result54$RR54[result54$clust54==2], col="lightblue", pch=16, cex=0.5)
+
+lines(reduced_noS_noX$mass1, pred54$Comp.1, lwd=2, col="red")
+lines(reduced_noS_noX$mass1, pred54$Comp.2, lwd=2, col="blue")
+
+lines(reduced_noS_noX$mass1, pred54$Comp.1-1.96*stdErr54.1, lwd=1, lty=2, col="red")
+lines(reduced_noS_noX$mass1, pred54$Comp.1+1.96*stdErr54.1, lwd=1, lty=2, col="red")
+lines(reduced_noS_noX$mass1, pred54$Comp.2-1.96*stdErr54.2, lwd=1, lty=2, col="blue")
+lines(reduced_noS_noX$mass1, pred54$Comp.2+1.96*stdErr54.2, lwd=1, lty=2, col="blue")
+
+
+points(reduced_noS_noX$mass1[idSel], reduced_noS_noX$RR54[idSel], pch=16, cex=.5)
+lines(reduced_noS_noX$mass1[sort(idSel)], predSel, col=1, lwd=.5)
+lines(reduced_noS_noX$mass1[sort(idSel)], predSel-1.96*stdErr54.sel, col=1, lty=2, lwd=.5)
+lines(reduced_noS_noX$mass1[sort(idSel)], predSel+1.96*stdErr54.sel, col=1, lty=2, lwd=.5)
+```
+
+
+### Lipids with S-atoms
+
+#### Relative Ratio 21
+```{r RR21 with S, echo=FALSE}
+if(!file.exists("resultRR21.S.rds")){
+  fModel.S <- flexmix(RR21~m0, k=3, data=reduced_S, concomitant=FLXPmultinom(~ m0 + m32))
+
+  refittedModel.S <- refit(fModel.S)
+   saveRDS(file="resultRR21.S.rds", object = fModel.S) 
+  
+}else{
+  fModel.S <- readRDS("resultRR21.S.rds")
+  refittedModel.S <- refit(fModel.S)
+  
+}
+  
+summary(refittedModel.S, which = "model")
+summary(refittedModel.S, which = "concomitant")
+```
+
+```{r RR21 with S prediction, echo=FALSE}
+pred <- predict(fModel.S, reduced_S)
+clust <- clusters(fModel.S,reduced_S)
+result <- cbind(reduced_S,data.frame(pred),data.frame(clust))
+
+MSE.1 <- mean((result$RR21-result$Comp.1)^2)
+MSE.2 <- mean((result$RR21-result$Comp.2)^2)
+MSE.3 <- mean((result$RR21-result$Comp.3)^2)
+
+n1 <- length(which(result$clust==1))
+n2 <- length(which(result$clust==2))
+n3 <- length(which(result$clust==3))  
+
+avgMass <- mean(reduced_S$m0)
+predMassDiff <- (reduced_S$m0 - avgMass)^2
+sumDiff <- sum((reduced_S$m0 - avgMass)^2)
+ 
+stdErr.1 <- sqrt(MSE.1*(1 + 1/n1 + predMassDiff/sumDiff))
+stdErr.2 <- sqrt(MSE.2*(1 + 1/n2 + predMassDiff/sumDiff))
+stdErr.3 <- sqrt(MSE.3*(1 + 1/n3 + predMassDiff/sumDiff))
+
+predAggregate <- predict(fModel.S, newdata = reduced_S, aggregate = TRUE)[[1]][,1]
+result$aggregate <- predAggregate
+MSE.aggregate <- mean((result$RR21-result$aggregate)^2)
+n.a <- length(result$clust)
+avgMass.aggregate <- mean(reduced_S$m0)
+predMassDiff.aggregate <- (result$m0 - avgMass.aggregate)^2
+sumDiff.aggregate <- sum((reduced_S$m0 - avgMass.aggregate)^2)
+stdErr.aggregate <- sqrt(MSE.aggregate*(1 + 1/n.a + predMassDiff.aggregate/sumDiff.aggregate))
+result$lower.aggregate <- result$aggregate-1.96*stdErr.aggregate
+result$upper.aggregate <- result$aggregate+1.96*stdErr.aggregate
+
+idSel <- sort(seq(from=1, to=2205, by=50))
+predSel <- predict(fModel.S, newdata = reduced_S[idSel,], aggregate = TRUE)[[1]][,1]
+predMassDiff.sel <- (reduced_S$m0[idSel] - avgMass.aggregate)^2
+stdErr21.sel <- sqrt(MSE.aggregate*(1 + 1/n.a + predMassDiff.sel/sumDiff.aggregate))
+``` 
+
+```{r RR21 with S plots, echo=FALSE}
+plot(reduced_S$mass1, reduced_S$RR21, type="n", xlab="Mono-isotopic mass", ylab="Relative Ratio21", main="With S-atoms", ylim=c(0,1.2))
+points(reduced_S$mass1[result$clust==1], result$RR21[result$clust==1], col="pink", pch=16, cex=0.5)
+points(reduced_S$mass1[result$clust==2], result$RR21[result$clust==2], col="lightblue", pch=16, cex=0.5)
+points(reduced_S$mass1[result$clust==3], result$RR21[result$clust==3], col="lightgreen", pch=16, cex=0.5)
+
+lines(reduced_S$mass1, pred$Comp.1, lwd=2, col="red")
+lines(reduced_S$mass1, pred$Comp.2, lwd=2, col="blue")
+lines(reduced_S$mass1, pred$Comp.3, lwd=2, col="green")
+
+lines(reduced_S$mass1, pred$Comp.1-1.96*stdErr.1, lwd=1, lty=2, col="red")
+lines(reduced_S$mass1, pred$Comp.1+1.96*stdErr.1, lwd=1, lty=2, col="red")
+lines(reduced_S$mass1, pred$Comp.2-1.96*stdErr.2, lwd=1, lty=2, col="blue")
+lines(reduced_S$mass1, pred$Comp.2+1.96*stdErr.2, lwd=1, lty=2, col="blue")
+lines(reduced_S$mass1, pred$Comp.3-1.96*stdErr.3, lwd=1, lty=2, col="green")
+lines(reduced_S$mass1, pred$Comp.3+1.96*stdErr.3, lwd=1, lty=2, col="green")
+
+points(reduced_S$mass1[idSel], reduced_S$RR21[idSel], pch=16, cex=.5)
+lines(reduced_S$mass1[sort(idSel)], predSel, col=1, lwd=.5)
+lines(reduced_S$mass1[sort(idSel)], predSel-1.96*stdErr21.sel, col=1, lty=2, lwd=.5)
+lines(reduced_S$mass1[sort(idSel)], predSel+1.96*stdErr21.sel, col=1, lty=2, lwd=.5)
+```
+
+#### Relative Ratio 32
+
+```{r RR32 with S, echo=FALSE}
+reduced_S_noX <- subset(reduced_S, Halogens==0)
+
+if(!file.exists("resultRR32.S.rds")){
+  
+  fModel32.S <- flexmix(RR32~m0, k=3, data=reduced_S_noX, concomitant=FLXPmultinom(~ m0 + m32))
+
+  refittedModel32.S <- refit(fModel32.S)
+  saveRDS(file="resultRR32.S.rds", object=fModel32.S)
+  
+}else{
+  fModel32.S <- readRDS("resultRR32.S.rds")
+  refittedModel32.S <- refit(fModel32.S)
+  
+}
+  
+summary(refittedModel32.S, which = "model")
+summary(refittedModel32.S, which = "concomitant")
+```
+
+```{r RR32 with S prediction, echo=FALSE}
+pred <- predict(fModel32.S, reduced_S_noX)
+clust <- clusters(fModel32.S, reduced_S_noX)
+result <- cbind(reduced_S_noX, data.frame(pred), data.frame(clust))
+
+MSE.1 <- mean((result$RR32-result$Comp.1)^2)
+MSE.2 <- mean((result$RR32-result$Comp.2)^2)
+MSE.3 <- mean((result$RR32-result$Comp.3)^2)
+
+n1 <- length(which(result$clust==1))
+n2 <- length(which(result$clust==2))
+n3 <- length(which(result$clust==3))  
+
+avgMass <- mean(reduced_S_noX$m0)
+predMassDiff <- (reduced_S_noX$m0 - avgMass)^2
+sumDiff <- sum((reduced_S_noX$m0 - avgMass)^2)
+ 
+stdErr.1 <- sqrt(MSE.1*(1 + 1/n1 + predMassDiff/sumDiff))
+stdErr.2 <- sqrt(MSE.2*(1 + 1/n2 + predMassDiff/sumDiff))
+stdErr.3 <- sqrt(MSE.3*(1 + 1/n3 + predMassDiff/sumDiff))
+
+predAggregate <- predict(fModel32.S, newdata = reduced_S_noX, aggregate = TRUE)[[1]][,1]
+result$aggregate <- predAggregate
+MSE.aggregate <- mean((result$RR32-result$aggregate)^2)
+n.a <- length(result$clust)
+avgMass.aggregate <- mean(reduced_S_noX$m0)
+predMassDiff.aggregate <- (result$m0 - avgMass.aggregate)^2
+sumDiff.aggregate <- sum((reduced_S_noX$m0 - avgMass.aggregate)^2)
+stdErr.aggregate <- sqrt(MSE.aggregate*(1 + 1/n.a + predMassDiff.aggregate/sumDiff.aggregate))
+result$lower.aggregate <- result$aggregate-1.96*stdErr.aggregate
+result$upper.aggregate <- result$aggregate+1.96*stdErr.aggregate
+
+idSel <- sort(seq(from=1, to=2205, by=50))
+predSel <- predict(fModel32.S, newdata = reduced_S_noX[idSel,], aggregate = TRUE)[[1]][,1]
+predMassDiff.sel <- (reduced_S_noX$m0[idSel] - avgMass.aggregate)^2
+stdErr32.sel <- sqrt(MSE.aggregate*(1 + 1/n.a + predMassDiff.sel/sumDiff.aggregate))
+``` 
+
+```{r RR32 with S plots, echo=FALSE}
+plot(reduced_S_noX$mass1, reduced_S_noX$RR32, type="n", xlab="Mono-isotopic mass", ylab="Relative Ratio32", main="With S-atoms", ylim=c(0,1.2))
+points(reduced_S_noX$mass1[result$clust==1], result$RR32[result$clust==1], col="pink", pch=16, cex=0.5)
+points(reduced_S_noX$mass1[result$clust==2], result$RR32[result$clust==2], col="lightblue", pch=16, cex=0.5)
+points(reduced_S_noX$mass1[result$clust==3], result$RR32[result$clust==3], col="lightgreen", pch=16, cex=0.5)
+
+lines(reduced_S_noX$mass1, pred$Comp.1, lwd=2, col="red")
+lines(reduced_S_noX$mass1, pred$Comp.2, lwd=2, col="blue")
+lines(reduced_S_noX$mass1, pred$Comp.3, lwd=2, col="green")
+
+lines(reduced_S_noX$mass1, pred$Comp.1-1.96*stdErr.1, lwd=1, lty=2, col="red")
+lines(reduced_S_noX$mass1, pred$Comp.1+1.96*stdErr.1, lwd=1, lty=2, col="red")
+lines(reduced_S_noX$mass1, pred$Comp.2-1.96*stdErr.2, lwd=1, lty=2, col="blue")
+lines(reduced_S_noX$mass1, pred$Comp.2+1.96*stdErr.2, lwd=1, lty=2, col="blue")
+lines(reduced_S_noX$mass1, pred$Comp.3-1.96*stdErr.3, lwd=1, lty=2, col="green")
+lines(reduced_S_noX$mass1, pred$Comp.3+1.96*stdErr.3, lwd=1, lty=2, col="green")
+
+points(reduced_S_noX$mass1[idSel], reduced_S_noX$RR21[idSel], pch=16, cex=.5)
+lines(reduced_S_noX$mass1[sort(idSel)], predSel, col=1, lwd=.5)
+lines(reduced_S_noX$mass1[sort(idSel)], predSel-1.96*stdErr32.sel, col=1, lty=2, lwd=.5)
+lines(reduced_S_noX$mass1[sort(idSel)], predSel+1.96*stdErr32.sel, col=1, lty=2, lwd=.5)
+```
+
+#### Relative Ratio 43
+```{r RR43 with S, echo=FALSE}
+if(!file.exists("resultRR43.S.rds")){
+  fModel43.S <- flexmix(RR43~m0, k=2, data=reduced_S, concomitant=FLXPmultinom(~m0 + m32))
+  refittedModel43.S <- refit(fModel43.S)
+  saveRDS(fModel43.S, "resultRR43.S.rds")
+}else{
+  fModel43.S <- readRDS("resultRR43.S.rds")
+  refittedModel43.S <- refit(fModel43.S)
+}
+
+summary(refittedModel43.S, which = "model")
+summary(refittedModel43.S, which = "concomitant")
+```
+
+
+```{r with S RR43 prediction, echo=FALSE}
+pred43 <- predict(fModel43.S, reduced_S)
+clust43 <- clusters(fModel43.S,reduced_S)
+result43 <- cbind(reduced_S,data.frame(pred43),data.frame(clust43))
+
+MSE43.1 <- mean((result43$RR43-result43$Comp.1)^2)
+MSE43.2 <- mean((result43$RR43-result43$Comp.2)^2)
+MSE43.3 <- mean((result43$RR43-result43$Comp.3)^2)
+
+n1 <- length(which(result43$clust==1))
+n2 <- length(which(result43$clust==2))
+n3 <- length(which(result43$clust==3))  
+
+avgMass <- mean(reduced_S$m0)
+predMassDiff <- (reduced_S$m0 - avgMass)^2
+sumDiff <- sum((reduced_S$m0 - avgMass)^2)
+ 
+stdErr43.1 <- sqrt(MSE43.1*(1 + 1/n1 + predMassDiff/sumDiff))
+stdErr43.2 <- sqrt(MSE43.2*(1 + 1/n2 + predMassDiff/sumDiff))
+stdErr43.3 <- sqrt(MSE43.3*(1 + 1/n3 + predMassDiff/sumDiff))
+
+predAggregate43 <- predict(fModel43.S, newdata = reduced_S, aggregate = TRUE)[[1]][,1]
+result43$aggregate <- predAggregate43
+MSE43.aggregate <- mean((result43$RR43-result43$aggregate)^2)
+n.a <- length(result43$clust)
+avgMass.aggregate <- mean(reduced_S$m0)
+predMassDiff.aggregate <- (result43$m0 - avgMass.aggregate)^2
+sumDiff.aggregate <- sum((reduced_S$m0 - avgMass.aggregate)^2)
+stdErr43.aggregate <- sqrt(MSE43.aggregate*(1 + 1/n.a + predMassDiff.aggregate/sumDiff.aggregate))
+result43$lower.aggregate <- result43$aggregate-1.96*stdErr43.aggregate
+result43$upper.aggregate <- result43$aggregate+1.96*stdErr43.aggregate
+
+idSel <- seq(from=50, to=2205, by=200)
+predSel <- predict(fModel43.S, newdata = reduced_S[idSel,], aggregate = TRUE)[[1]][,1]
+predMassDiff.sel <- (reduced_S$m0[idSel] - avgMass.aggregate)^2
+stdErr43.sel <- sqrt(MSE43.aggregate*(1 + 1/n.a + predMassDiff.sel/sumDiff.aggregate))
+``` 
+
+```{r with S RR43 plots, echo=FALSE}
+plot(reduced_S$mass1, reduced_S$RR43, pch=16, col="gray75", cex=0.5, type="n", xlab="Mono-isotopic mass", ylab="Relative Ratio 43", main="With S-atoms", ylim=c(0,0.6))
+points(reduced_S$mass1[result43$clust43==1], result43$RR43[result43$clust43==1], col="pink", pch=16, cex=0.5)
+points(reduced_S$mass1[result43$clust43==2], result43$RR43[result43$clust43==2], col="lightblue", pch=16, cex=0.5)
+#points(reduced_S$mass1[result43$clust43==3], result43$RR43[result43$clust43==3], col="lightgreen", pch=16, cex=0.5)
+lines(reduced_S$mass1, pred43$Comp.1, lwd=2, col="red")
+lines(reduced_S$mass1, pred43$Comp.2, lwd=2, col="blue")
+lines(reduced_S$mass1, pred43$Comp.3, lwd=2, col="green")
+lines(reduced_S$mass1, pred43$Comp.1-1.96*stdErr43.1, lwd=1, lty=2, col="red")
+lines(reduced_S$mass1, pred43$Comp.1+1.96*stdErr43.1, lwd=1, lty=2, col="red")
+lines(reduced_S$mass1, pred43$Comp.2-1.96*stdErr43.2, lwd=1, lty=2, col="blue")
+lines(reduced_S$mass1, pred43$Comp.2+1.96*stdErr43.2, lwd=1, lty=2, col="blue")
+#lines(reduced_S$mass1, pred43$Comp.3-1.96*stdErr43.3, lwd=1, lty=2, col="green")
+#lines(reduced_S$mass1, pred43$Comp.3+1.96*stdErr43.3, lwd=1, lty=2, col="green")
+
+points(reduced_S$mass1[idSel], reduced_S$RR43[idSel], pch=16, cex=.5)
+lines(reduced_S$mass1[sort(idSel)], predSel, col=1, lwd=.5)
+lines(reduced_S$mass1[sort(idSel)], predSel-1.96*stdErr43.sel, col=1, lty=2, lwd=.5)
+#lines(reduced_S$mass1[sort(idSel)], predSel+1.96*stdErr43.sel, col=1, lty=2, lwd=.5)
+```
+
+#### Relative Ratio 54
+```{r RR54 with S, echo=FALSE}
+reduced_S_noX <- subset(reduced_S, Halogens==0)
+
+if(!file.exists("resultRR54.S.rds")){
+  
+  fModel54.S <- flexmix(RR54~ m0 + m32, k=2, data=reduced_S_noX, concomitant=FLXPmultinom(~ m0 + m32))
+ 
+  refittedModel54.S <- refit(fModel54.S)
+  saveRDS(file="resultRR54.S.rds", object=fModel54.S)
+  
+}else{
+  fModel54.S <- readRDS("resultRR54.S.rds")
+  refittedModel54.S <- refit(fModel54.S)
+  
+}
+  
+summary(refittedModel54.S, which = "model")
+summary(refittedModel54.S, which = "concomitant")
+```
+
+```{r with S RR54 prediction, echo=FALSE}
+pred54 <- predict(fModel54.S, reduced_S_noX)
+clust54 <- clusters(fModel54.S,reduced_S_noX)
+result54 <- cbind(reduced_S_noX,data.frame(pred54),data.frame(clust54))
+
+MSE54.1 <- mean((result54$RR54-result54$Comp.1)^2)
+MSE54.2 <- mean((result54$RR54-result54$Comp.2)^2)
+MSE54.3 <- mean((result54$RR54-result54$Comp.3)^2)
+
+n1 <- length(which(result54$clust==1))
+n2 <- length(which(result54$clust==2))
+n3 <- length(which(result54$clust==3))  
+
+avgMass <- mean(reduced_S_noX$m0)
+predMassDiff <- (reduced_S_noX$m0 - avgMass)^2
+sumDiff <- sum((reduced_S_noX$m0 - avgMass)^2)
+
+stdErr54.1 <- sqrt(MSE54.1*(1 + 1/n1 + predMassDiff/sumDiff))
+stdErr54.2 <- sqrt(MSE54.2*(1 + 1/n2 + predMassDiff/sumDiff))
+stdErr54.3 <- sqrt(MSE54.3*(1 + 1/n3 + predMassDiff/sumDiff))
+
+predAggregate54 <- predict(fModel54.S, newdata = reduced_S_noX, aggregate = TRUE)[[1]][,1]
+result54$aggregate <- predAggregate54
+MSE54.aggregate <- mean((result54$RR54-result54$aggregate)^2)
+n.a <- length(result54$clust)
+avgMass.aggregate <- mean(reduced_S_noX$m0)
+predMassDiff.aggregate <- (result54$m0 - avgMass.aggregate)^2
+sumDiff.aggregate <- sum((reduced_S_noX$m0 - avgMass.aggregate)^2)
+stdErr54.aggregate <- sqrt(MSE54.aggregate*(1 + 1/n.a + predMassDiff.aggregate/sumDiff.aggregate))
+result54$lower.aggregate <- result54$aggregate-1.96*stdErr54.aggregate
+result54$upper.aggregate <- result54$aggregate+1.96*stdErr54.aggregate
+
+idSel <- seq(from=1, to=dim(reduced_S_noX)[1], by=50)
+predSel <- predict(fModel54.S, newdata = reduced_S_noX[idSel,], aggregate = TRUE)[[1]][,1]
+predMassDiff.sel <- (reduced_S_noX$m0[idSel] - avgMass.aggregate)^2
+stdErr54.sel <- sqrt(MSE54.aggregate*(1 + 1/n.a + predMassDiff.sel/sumDiff.aggregate))
+``` 
+
+```{r with S RR54 plots, echo=FALSE}
+plot(reduced_S_noX$mass1, reduced_S_noX$RR54, pch=16, col="gray75", cex=0.5, type="n", xlab="Mono-isotopic mass", ylab="Relative Ratio 54", main="With S-atoms, without halogens", ylim=c(0,.6))
+points(reduced_S_noX$mass1[result54$clust54==1], result54$RR54[result54$clust54==1], col="pink", pch=16, cex=0.5)
+points(reduced_S_noX$mass1[result54$clust54==2], result54$RR54[result54$clust54==2], col="lightblue", pch=16, cex=0.5)
+#points(reduced_S_noX$mass1[result54$clust54==3], result54$RR54[result54$clust54==3], col="lightgreen", pch=16, cex=0.5)
+lines(reduced_S_noX$mass1, pred54$Comp.1, lwd=2, col="red")
+lines(reduced_S_noX$mass1, pred54$Comp.2, lwd=2, col="blue")
+lines(reduced_S_noX$mass1, pred54$Comp.3, lwd=2, col="green")
+lines(reduced_S_noX$mass1, pred54$Comp.1-1.96*stdErr54.1, lwd=1, lty=2, col="red")
+lines(reduced_S_noX$mass1, pred54$Comp.1+1.96*stdErr54.1, lwd=1, lty=2, col="red")
+lines(reduced_S_noX$mass1, pred54$Comp.2-1.96*stdErr54.2, lwd=1, lty=2, col="blue")
+lines(reduced_S_noX$mass1, pred54$Comp.2+1.96*stdErr54.2, lwd=1, lty=2, col="blue")
+#lines(reduced_S_noX$mass1, pred54$Comp.3-1.96*stdErr54.3, lwd=1, lty=2, col="green")
+#lines(reduced_S_noX$mass1, pred54$Comp.3+1.96*stdErr54.3, lwd=1, lty=2, col="green")
+
+points(reduced_S_noX$mass1[idSel], reduced_S_noX$RR54[idSel], pch=16, cex=.5)
+lines(reduced_S_noX$mass1[sort(idSel)], predSel, col=1, lwd=.5)
+lines(reduced_S_noX$mass1[sort(idSel)], predSel-1.96*stdErr54.sel, col=1, lty=2, lwd=.5)
+#lines(reduced_S_noX$mass1[sort(idSel)], predSel+1.96*stdErr54.sel, col=1, lty=2, lwd=.5)
+```
