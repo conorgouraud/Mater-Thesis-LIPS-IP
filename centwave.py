@@ -4,7 +4,7 @@ import pandas as pd
 import gc 
 import os
 
-# centWave implemented in R
+# centWave from R
 def centwave_on_raw_data(file_path, output_file):
     xcms = importr('xcms')
     MSnbase = importr('MSnbase')

@@ -17,6 +17,7 @@ from nominal_mass_pred import PredNomMass, k, MSE, corr_fact, diff_mass_sum
 from element_range_pred import *
 from refined_hydrogen_rule import *
 from Lipid_class_predictor import *
+from headgroup_checker import *
 
 start_time = time.time()
 
@@ -29,6 +30,8 @@ raw_file_path = 'LIPIDS3_20231027_011.mzXML'
 pred_interval = 0.995 # for the RR prediction
 charge = 1 # +1 or -1 for positive or negative charge adduct
 mass_error = 5  # in ppm (+/- mass*ppm/1e6)
+
+#To add for convenience here: option for m32, elements to include (mass decomp 30/32), number of db allowed in kmd method
 
 ################################################################################################################################
 
@@ -63,6 +66,7 @@ if __name__ == "__main__":
     output_file = "trackable_outputs/centwave_output.csv"
     centwave_on_raw_data(raw_file_path, output_file)
     print('Finished using Centwave.')
+
 
 ### Checking if mono isotopic mass of triple lies in a EIC from centWave (bad isotope patterns removed) ###
 centwave_df = pd.read_csv('trackable_outputs/centwave_output.csv') # not numeric for some reason so change like this for the moment
@@ -140,116 +144,51 @@ iso_pattern_df.to_csv('trackable_outputs/good_triples_and_their_features.csv.zip
 
 RR_lookup_table = pd.read_csv("database_folder/RR_lookup_table.csv") # RR reference table
 
-pandas2ri.activate()  # switch easily between R and pandas
 
-# Predicting C ranges
-element = "C"
-print("Predicting", element, "ranges...")
+pandas2ri.activate()
+
+#predicting element ranges
+elements = {
+    "C": ("relative_ratios_no_fracmass/resultRR21.noS.rds", False, predRR21_agg_nfc),
+    "H": ("update_relative_ratios/resultRR21_fractionalMass.noS.rds", True, predRR21_agg_fc),
+    "N": ("relative_ratios_no_fracmass/resultRR21.noS.rds", False, predRR21_agg_nfc),
+    "O": ("update_relative_ratios/resultRR43_fractionalMass.noS.rds", True, predRR43_agg_fc),
+    "P": ("update_relative_ratios/resultRR32_fractionalMass.noS.rds", True, predRR32_agg_fc)
+}
+
 readRDS = ro.r['readRDS']
-fModel = readRDS("relative_ratios_no_fracmass/resultRR21.noS.rds")
 
-toPred = ro.r['data.frame'](
-    m0=iso_pattern_df['m0'],
-    m21=iso_pattern_df['m21'],
-    m32=iso_pattern_df['m32']
-)
+for element, (model_path, has_frac_mass, function) in elements.items():
+    print(f"Predicting {element} ranges...")
+    
+    # Load the specific model file for the current element
+    fModel = readRDS(model_path)
+    
+    # Prepare the data frame for prediction
+    toPred_dict = {
+        'm0': iso_pattern_df['m0'],
+        'm21': iso_pattern_df['m21'],
+        'm32': iso_pattern_df['m32']
+    }
+    
+    if has_frac_mass:
+        toPred_dict['fractionalMass'] = iso_pattern_df['frac_mass']
 
-resRR = predRR21_agg_nfc(x=toPred, modelOutput=fModel, conf_int=True, conf_level=pred_interval, S=False)
-resRR_df = pandas2ri.rpy2py(resRR)
-
-
-resRR_df = calculate_element_min_max(resRR_df, RR_lookup_table, element, pred_interval)
-
-iso_pattern_df = iso_pattern_df.reset_index(drop=True)  # was some indexing issues so leave these for the moment
-resRR_df = resRR_df.reset_index(drop=True)
-iso_pattern_df = iso_pattern_df.merge(resRR_df[[f"{element}minpred_{pred_interval}", f"{element}maxpred_{pred_interval}"]], left_index=True, right_index=True)
-
-# Predicting H ranges
-element = "H"
-print("Predicting", element, "ranges...")
-readRDS = ro.r['readRDS']
-fModel = readRDS("update_relative_ratios/resultRR21_fractionalMass.noS.rds")
-
-toPred = ro.r['data.frame'](  # used as input to model for predictions
-    m0=iso_pattern_df['m0'],
-    m21=iso_pattern_df['m21'],
-    m32=iso_pattern_df['m32'],
-    fractionalMass=iso_pattern_df['frac_mass']
-)
-
-resRR = predRR21_agg_fc(x=toPred, modelOutput=fModel, conf_int=True, conf_level=pred_interval, S=False)
-resRR_df = pandas2ri.rpy2py(resRR)
-
-resRR_df = calculate_element_min_max(resRR_df, RR_lookup_table, element, pred_interval)
-
-iso_pattern_df = iso_pattern_df.reset_index(drop=True)  # was some indexing issues so leave these for the moment
-resRR_df = resRR_df.reset_index(drop=True)
-iso_pattern_df = iso_pattern_df.merge(resRR_df[[f"{element}minpred_{pred_interval}", f"{element}maxpred_{pred_interval}"]], left_index=True, right_index=True)
-
-# Predicting N ranges
-element = "N"
-print("Predicting", element, "ranges...")
-readRDS = ro.r['readRDS']
-fModel = readRDS("relative_ratios_no_fracmass/resultRR21.noS.rds")
-
-toPred = ro.r['data.frame'](  # used as input to model for predictions
-    m0=iso_pattern_df['m0'],
-    m21=iso_pattern_df['m21'],
-    m32=iso_pattern_df['m32']
-)
-
-resRR = predRR21_agg_nfc(x=toPred, modelOutput=fModel, conf_int=True, conf_level=pred_interval, S=False)
-resRR_df = pandas2ri.rpy2py(resRR)
-
-resRR_df = calculate_element_min_max(resRR_df, RR_lookup_table, element, pred_interval)
-
-iso_pattern_df = iso_pattern_df.reset_index(drop=True)  # was some indexing issues so leave these for the moment
-resRR_df = resRR_df.reset_index(drop=True)
-iso_pattern_df = iso_pattern_df.merge(resRR_df[[f"{element}minpred_{pred_interval}", f"{element}maxpred_{pred_interval}"]], left_index=True, right_index=True)
-
-# Predicting O ranges
-element = "O"
-print("Predicting", element, "ranges...")
-readRDS = ro.r['readRDS']
-fModel = readRDS("update_relative_ratios/resultRR43_fractionalMass.noS.rds")
-
-toPred = ro.r['data.frame'](  # used as input to model for predictions
-    m0=iso_pattern_df['m0'],
-    m21=iso_pattern_df['m21'],
-    m32=iso_pattern_df['m32'],
-    fractionalMass=iso_pattern_df['frac_mass']
-)
-
-resRR = predRR43_agg_fc(x=toPred, modelOutput=fModel, conf_int=True, conf_level=pred_interval, S=False)
-resRR_df = pandas2ri.rpy2py(resRR)
-
-resRR_df = calculate_element_min_max(resRR_df, RR_lookup_table, element, pred_interval)
-
-iso_pattern_df = iso_pattern_df.reset_index(drop=True)  # was some indexing issues so leave these for the moment
-resRR_df = resRR_df.reset_index(drop=True)
-iso_pattern_df = iso_pattern_df.merge(resRR_df[[f"{element}minpred_{pred_interval}", f"{element}maxpred_{pred_interval}"]], left_index=True, right_index=True)
-
-# Predicting P ranges
-element = "P"
-print("Predicting", element, "ranges...")
-readRDS = ro.r['readRDS']
-fModel = readRDS("update_relative_ratios/resultRR32_fractionalMass.noS.rds")
-
-toPred = ro.r['data.frame'](  # used as input to model for predictions
-    m0=iso_pattern_df['m0'],
-    m21=iso_pattern_df['m21'],
-    m32=iso_pattern_df['m32'],
-    fractionalMass=iso_pattern_df['frac_mass']
-)
-
-resRR = predRR32_agg_fc(x=toPred, modelOutput=fModel, conf_int=True, conf_level=pred_interval, S=False)
-resRR_df = pandas2ri.rpy2py(resRR)
-
-resRR_df = calculate_element_min_max(resRR_df, RR_lookup_table, element, pred_interval)
-
-iso_pattern_df = iso_pattern_df.reset_index(drop=True)  # was some indexing issues so leave these for the moment
-resRR_df = resRR_df.reset_index(drop=True)
-iso_pattern_df = iso_pattern_df.merge(resRR_df[[f"{element}minpred_{pred_interval}", f"{element}maxpred_{pred_interval}"]], left_index=True, right_index=True)
+    toPred = ro.r['data.frame'](**toPred_dict)
+    
+    # Use the direct function reference for prediction
+    resRR = function(x=toPred, modelOutput=fModel, conf_int=True, conf_level=pred_interval, S=False)
+    resRR_df = pandas2ri.rpy2py(resRR)
+    
+    # Calculate and integrate minimum and maximum predictions
+    resRR_df = calculate_element_min_max(resRR_df, RR_lookup_table, element, pred_interval)
+    
+    # Reset indices to prepare for merging
+    iso_pattern_df = iso_pattern_df.reset_index(drop=True)
+    resRR_df = resRR_df.reset_index(drop=True)
+    
+    # Merge the results into the main data frame
+    iso_pattern_df = iso_pattern_df.merge(resRR_df[[f"{element}minpred_{pred_interval}", f"{element}maxpred_{pred_interval}"]], left_index=True, right_index=True)
 
 
 ## Prep for mass decomposition ##
@@ -288,10 +227,10 @@ iso_pattern_df_grouped.to_csv('trackable_outputs/element_range_predictions_per_E
 
 print("After grouping by EIC, there are", len(iso_pattern_df_grouped), "features.")
 
+
 ####################################
 #### STEP 3: Mass Decomposition ####
 ####################################
-
 
 original_working_directory = os.getcwd() # saving this working directory
 os.chdir('mass_decomp_background_files/tools')  # directory with all mass decompositions files just for this bit
@@ -334,7 +273,7 @@ for index, row in tqdm(iso_pattern_df_grouped.iterrows(), total=len(iso_pattern_
     result = subprocess.run(command, capture_output=True, text=True)
     output = result.stdout
     lines = output.split('\n')
-    num_of_decomps = len(lines[30:len(lines)-3]) # these two lines are specific to only using CHNOPS as input elements for mass decomp
+    num_of_decomps = len(lines[30:len(lines)-3]) # these two lines are specific to only using CHNOP as input elements for mass decomp
     possible_formulas = lines[30:len(lines)-3]
 
     monoisotopic_masses_list.append(mass)
@@ -357,7 +296,7 @@ chemical_formulas_df = pd.DataFrame(mass_decomp_results)
 print('All possible chemical formulas found!')
 
 ##########################################
-#### STEP 5: Refined Hydrogen Rule ####
+#### STEP 4: Refined Hydrogen Rule ####
 ##########################################
 
 chemical_formulas_df['nominal_mass'] = chemical_formulas_df['Mass'].apply(lambda mass: PredNomMass(mass, k, MSE, corr_fact, diff_mass_sum)[0]) #nominal mass predicted again because last time it was per RT spectrum
@@ -365,6 +304,8 @@ chemical_formulas_df['nominal_mass'] = chemical_formulas_df['Mass'].apply(lambda
 chemical_formulas_df['Possible_formulas_after_Hrule'] = chemical_formulas_df.apply(apply_rules, formula_column='Possible_formulas', axis=1)
 
 chemical_formulas_df.to_csv('trackable_outputs/chemical_formulas_after_Hrule.csv', index=False)
+
+print('Refined hydrogen ule applied!')
 
 ###########################################
 #### STEP 5: Subclass Prediction (KMD) ####
@@ -383,7 +324,19 @@ for idx, row in tqdm(lipidmaps_df.iterrows(), total=lipidmaps_df.shape[0], desc=
     dictionaries.append(result)
 
 lipidmaps_df['Formula:subclass combos'] = dictionaries
-lipidmaps_df.to_csv(f'{raw_file_path}_output.csv.zip', compression='zip', index=False)
+
+
+###################################
+#### STEP 6: Headgroup Checker ####
+###################################
+
+headgroup_db = "database_folder/Headgroup_database.csv"
+headgroup_db = pd.read_csv(headgroup_db)
+
+final_df = check_heads(lipidmaps_df, headgroup_db)
+
+#final_df.to_csv(f'{raw_file_path}_output.csv.zip', compression='zip', index=False) 
+final_df.to_csv(f'{raw_file_path}_output.csv', index=False) 
 
 
 #############

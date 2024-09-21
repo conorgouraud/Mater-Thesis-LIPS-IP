@@ -1,0 +1,131 @@
+class,additional O,class_name,R_group,composition,Unnamed: 5,Unnamed: 6,priority_NP,priority_RP,combined,measurement,chem,chains
+TG,0.0,triacylglycerol,FA,,,,,10.0,,RP_pos_NH3; RP_pos_Na; RP_pos_K,C6H5O6,3
+TG,1.0,,,,_OH,,,3.0,,RP_pos_NH3,C6H5O7,3
+TG,2.0,,,,_2OH,,,3.0,,RP_pos_NH3,C6H5O8,3
+TG O-,0.0,alkyl-diacylglycerol,,,,O-,,10.0,,RP_pos_NH3; RP_pos_Na; RP_pos_K,C6H7O5,3
+?,0.0,,,BC-,,,,3.1,,RP_pos_NH3; RP_pos_Na; RP_pos_K,C6H5O6,3
+?,0.0,,,diBC-,,,,3.1,,RP_pos_NH3; RP_pos_Na; RP_pos_K,C6H5O6,3
+DG,0.0,diacylglycerol,FA,,,,,10.0,,RP_pos_NH3; RP_pos_Na; RP_pos_K,C5H6O5,2
+DG,1.0,,,,_OH,,,3.0,,RP_pos_NH3; RP_pos_Na; RP_pos_K,C5H6O6,2
+DG,2.0,,,,_2OH,,,3.0,,RP_pos_NH3; RP_pos_Na; RP_pos_K,C5H6O7,2
+DG O-,0.0,alkyl-acylglycerol,,,,O-,,10.0,DG_O,RP_pos_NH3; RP_pos_Na; RP_pos_K,C5H8O4,2
+?,0.0,,,BC-,,,,3.1,,RP_pos_NH3; RP_pos_Na; RP_pos_K,C5H6O5,2
+MG,0.0,monoacylglycerol,FA,,,,,5.0,,RP_pos_NH3; RP_pos_Na,C4H7O4,1
+MG,1.0,,,,_OH,,,3.0,,RP_pos_NH3; RP_pos_Na,C4H7O5,1
+MG,2.0,,,,_2OH,,,3.0,,RP_pos_NH3; RP_pos_Na,C4H7O6,1
+MG O-,0.0,alkylglycerol,,,,O-,,5.0,MG_O,RP_pos_NH3; RP_pos_Na,C4H9O3,1
+?,0.0,,,BC-,,,,3.1,,RP_pos_NH3; RP_pos_Na,C4H7O4,1
+CE,0.0,cholesteryl ester,FA,,,,,10.0,,RP_pos_NH3; RP_pos_Na; RP_pos_K,C28H45O2,1
+CE,1.0,,,,_OH,,,3.0,,RP_pos_NH3; RP_pos_Na; RP_pos_K,C28H45O3,1
+CE,2.0,,,,_2OH,,,3.0,,RP_pos_NH3; RP_pos_Na; RP_pos_K,C28H45O4,1
+?,0.0,,,BC-,,,,3.1,,RP_pos_NH3; RP_pos_Na; RP_pos_K,C28H45O2,1
+PC,0.0,phosphatidylcholine,FA,,,,10.0,10.0,,NP_pos_0; RP_pos_0; NP_neg_HCl; RP_neg_HCl; NP_neg_CH2O2; RP_neg_CH2O2,C10H18NO8P,2
+PC,1.0,,,,_OH,,3.0,3.0,,NP_pos_0; RP_pos_0,C10H18NO9P,2
+PC,2.0,,,,_2OH,,3.0,3.0,,NP_pos_0; RP_pos_0,C10H18NO10P,2
+PC,3.0,,,,_3OH,,3.0,3.0,,NP_pos_0; RP_pos_0,C10H18NO11P,2
+PC O-,0.0,alkyl-acylphosphatidylcholine,,,,O-,-1.0,10.0,PC_O,NP_pos_0; RP_pos_0; NP_neg_HCl; RP_neg_HCl; NP_neg_CH2O2; RP_neg_CH2O2,C10H20NO7P,2
+?,0.0,,,BC-,,,,3.1,,NP_pos_0; RP_pos_0; NP_neg_HCl; RP_neg_HCl; NP_neg_CH2O2; RP_neg_CH2O2,C10H18NO8P,2
+?,0.0,,,diBC-,,,,3.1,,NP_pos_0; RP_pos_0; NP_neg_HCl; RP_neg_HCl; NP_neg_CH2O2; RP_neg_CH2O2,C10H18NO8P,2
+LPC,0.0,lysophosphatidylcholine,FA,,,,10.0,-1.0,,NP_pos_0; RP_pos_0; NP_neg_HCl; RP_neg_HCl; NP_neg_CH2O2; RP_neg_CH2O2,C9H19NO7P,1
+LPC,1.0,,,,_OH,,3.0,3.0,,NP_pos_0; RP_pos_0,C9H19NO8P,1
+LPC,2.0,,,,_2OH,,3.0,3.0,,NP_pos_0; RP_pos_0,C9H19NO9P,1
+LPC,3.0,,,,_3OH,,3.0,3.0,,NP_pos_0; RP_pos_0,C9H19NO10P,1
+LPC O-,0.0,alkyl-lysophosphatidylcholine,,,,O-,-1.0,10.0,LPC_O,NP_pos_0; RP_pos_0; NP_neg_HCl; RP_neg_HCl; NP_neg_CH2O2; RP_neg_CH2O2,C9H21NO6P,1
+?,0.0,,,BC-,,,,3.1,,NP_pos_0; RP_pos_0; NP_neg_HCl; RP_neg_HCl; NP_neg_CH2O2; RP_neg_CH2O2,C9H19NO7P,1
+PE,0.0,phosphatidylethanolamine,FA,,,,10.0,10.0,,NP_neg_0; RP_neg_0; RP_pos_0; NP_pos_0,C7H12NO8P,2
+PE,1.0,,,,_OH,,3.0,3.0,,NP_neg_0; RP_neg_0; RP_pos_0; NP_pos_0,C7H12NO9P,2
+PE,2.0,,,,_2OH,,3.0,3.0,,NP_neg_0; RP_neg_0; RP_pos_0; NP_pos_0,C7H12NO10P,2
+PE O-,0.0,alkyl-acylphosphatidylethanolamine,,,,O-,-1.0,10.0,PE_O,NP_neg_0; RP_neg_0; RP_pos_0; NP_pos_0,C7H14NO7P,2
+?,0.0,,,BC-,,,,3.1,,NP_neg_0; RP_neg_0; RP_pos_0; NP_pos_0,C7H12NO8P,2
+LPE,0.0,lysophosphatidylethanolamine,FA,,,,10.0,-1.0,,NP_neg_0; RP_neg_0; RP_pos_0; NP_pos_0,C6H13NO7P,1
+LPE,1.0,,,,_OH,,3.0,3.0,,NP_neg_0; RP_neg_0; RP_pos_0; NP_pos_0,C6H13NO8P,1
+LPE,2.0,,,,_2OH,,3.0,3.0,,NP_neg_0; RP_neg_0; RP_pos_0; NP_pos_0,C6H13NO9P,1
+LPE O-,0.0,alkyl-lysophosphatidylethanolamine,,,,O-,-1.0,10.0,LPE_O,NP_neg_0; RP_neg_0; RP_pos_0; NP_pos_0,C6H15NO6P,1
+?,0.0,,,BC-,,,,3.1,,NP_neg_0; RP_neg_0; RP_pos_0; NP_pos_0,C6H13NO7P,1
+PI,0.0,phosphatidylinositol,FA,,,,10.0,7.0,,NP_neg_0; RP_neg_0; NP_pos_NH3; RP_pos_NH3; NP_pos_0,C11H17O13P,2
+PI,1.0,,,,_OH,,3.0,3.0,,NP_neg_0; RP_neg_0,C11H17O14P,2
+PI,2.0,,,,_2OH,,3.0,3.0,,NP_neg_0; RP_neg_0,C11H17O15P,2
+?,0.0,,,BC-,,,,3.1,,NP_neg_0; RP_neg_0; NP_pos_NH3; RP_pos_NH3; NP_pos_0,C11H17O13P,2
+LPI,0.0,lysophosphatidylinositol,FA,,,,10.0,7.0,,NP_neg_0; RP_neg_0; NP_pos_0,C10H18O12P,1
+LPI,1.0,,,,_OH,,3.0,3.0,,NP_neg_0; RP_neg_0,C10H18O13P,1
+LPI,2.0,,,,_2OH,,3.0,3.0,,NP_neg_0; RP_neg_0,C10H18O14P,1
+PS,0.0,phosphatidylserine,FA,,,,10.0,10.0,,NP_pos_0; NP_neg_0; RP_neg_0; RP_pos_0,C8H12NO10P,2
+PS,1.0,,,,_OH,,3.0,3.0,,NP_neg_0; NP_pos_0; RP_pos_0; RP_neg_0,C8H12NO11P,2
+PS,2.0,,,,_2OH,,3.0,3.0,,NP_neg_0; NP_pos_0; RP_pos_0; RP_neg_0,C8H12NO12P,2
+LPS,0.0,lysophosphatidylserine,FA,,,,10.0,10.0,,NP_pos_0; NP_neg_0; RP_neg_0; RP_pos_0,C7H13NO9P,1
+LPS,1.0,,,,_OH,,,,,NP_neg_0; NP_pos_0; RP_pos_0; RP_neg_0,C7H13NO10P,1
+LPS,2.0,,,,_2OH,,,,,NP_neg_0; NP_pos_0; RP_pos_0; RP_neg_0,C7H13NO11P,1
+LPA,0.0,lysophosphatidic acid,FA,,,,10.0,,,NP_neg_0; NP_neg_CH2O2,C4H8O7P,1
+LPA,1.0,,,,_OH,,3.0,3.0,,NP_neg_0,C4H8O8P,1
+LPA,2.0,,,,_2OH,,3.0,3.0,,NP_neg_0,C4H8O9P,1
+LPA O-,0.0,alkyl/alkenyl-lysophosphatidic acid,,,,O+P-,5.0,,,NP_neg_0,C4H10O6P,1
+PA,0.0,phosphatidic acid,FA,,,,10.0,,,NP_neg_0; NP_neg_HCl; NP_neg_CH2O2,C5H7O8P,2
+PA,1.0,,,,_OH,,3.0,3.0,,NP_neg_0,C5H7O9P,2
+PA,2.0,,,,_2OH,,3.0,3.0,,NP_neg_0,C5H7O10P,2
+PA O-,0.0,alkyl/alkenyl-acylphosphatidic acid,,,,O+P-,5.0,,,NP_neg_0; NP_neg_HCl,C5H9O7P,2
+LBPA,0.0,bis(monoacylglycero)phosphate,FA,,,,10.0,5.0,,NP_neg_0; NP_pos_NH3; RP_neg_0,C8H13O10P,2
+LBPA,1.0,,,,_OH,,3.0,3.0,,NP_neg_0; NP_pos_NH3; RP_neg_0,C8H13O11P,2
+LBPA,2.0,,,,_2OH,,3.0,3.0,,NP_neg_0; NP_pos_NH3; RP_neg_0,C8H13O12P,2
+?,0.0,,,BC-,,,,3.1,,NP_neg_0; NP_pos_NH3; RP_neg_0,C8H13O10P,2
+?,0.0,,,diBC-,,,,3.1,,NP_neg_0; NP_pos_NH3; RP_neg_0,C8H13O10P,2
+PG,0.0,phosphatidylglycerol,FA,,,,10.0,5.0,,NP_neg_0; RP_neg_0; NP_pos_NH3,C8H13O10P,2
+PG,1.0,,,,_OH,,3.0,3.0,,NP_neg_0; RP_neg_0; NP_pos_NH3,C8H13O11P,2
+PG,2.0,,,,_2OH,,3.0,3.0,,NP_neg_0; RP_neg_0; NP_pos_NH3,C8H13O12P,2
+?,0.0,,,BC-,,,,3.1,,NP_neg_0; RP_neg_0; NP_pos_NH3,C8H13O10P,2
+LPG,0.0,lysophosphatidylglycerol,FA,,,,10.0,5.0,,NP_neg_0; RP_neg_0; RP_pos_0; NP_pos_0,C7H14O9P,1
+LPG,1.0,,,,_OH,,3.0,3.0,,NP_neg_0; RP_neg_0,C7H14O10P,1
+LPG,2.0,,,,_2OH,,3.0,3.0,,NP_neg_0; RP_neg_0,C7H14O11P,1
+?,0.0,,,BC-,,,,3.1,,NP_neg_0; RP_neg_0; RP_pos_0; NP_pos_0,C7H14O9P,1
+PGP,0.0,phosphatidylglycerophosphate,FA,,,,,,,,C8H14O13P2,2
+SLBPA,0.0,semilysobisphosphatidic acid,FA,,,,10.0,10.0,,NP_neg_0; RP_neg_0; NP_pos_NH3; RP_pos_NH3,C9H12O11P,3
+SLBPA,1.0,,,,_OH,,3.0,3.0,,NP_neg_0; RP_neg_0; NP_pos_NH3; RP_pos_NH3,C9H12O12P,3
+SLBPA,2.0,,,,_2OH,,3.0,3.0,,NP_neg_0; RP_neg_0; NP_pos_NH3; RP_pos_NH3,C9H12O13P,3
+?,0.0,,,BC-,,,,3.1,,NP_neg_0; RP_neg_0; NP_pos_NH3; RP_pos_NH3,C9H12O11P,3
+CAR,0.0,acylcarnitine,FA,,,,10.0,7.0,,NP_pos_0; RP_pos_0,C8H14NO4,1
+CAR,1.0,,,,_OH,,10.0,7.0,,NP_pos_0; RP_pos_0,C8H14NO5,1
+CAR,2.0,,,,_2OH,,3.0,3.0,,NP_pos_0; RP_pos_0,C8H14NO6,1
+?,0.0,,,BC-,,,,3.1,,NP_pos_0; RP_pos_0,C8H14NO4,1
+FA,0.0,fatty acid,FA,,,,7.0,10.0,,NP_neg_0; RP_neg_0,CHO2,1
+FA,1.0,,,,_OH,,7.0,10.0,,NP_neg_0; RP_neg_0,CHO3,1
+FA,2.0,,,,_2OH,,3.0,3.0,,NP_neg_0; RP_neg_0,CHO4,1
+FA,3.0,,,,_3OH,,3.0,3.0,,NP_neg_0; RP_neg_0,CHO5,1
+?,0.0,,,BC-,,,,3.1,,NP_neg_0; RP_neg_0,CHO2,1
+CL,0.0,cardiolipin,FA,,,,10.0,10.0,,NP_neg_0; NP_neg2_0; NP_pos_NH3; RP_pos_NH3; RP_neg_0; RP_neg2_0; RP_neg_Na,C13H18O17P2,4
+CL,1.0,,,,_OH,,3.0,3.0,,NP_neg_0; NP_neg2_0; NP_pos_NH3; RP_pos_NH3; RP_neg_0; RP_neg2_0; RP_neg_Na,C13H18O18P2,4
+CL,2.0,,,,_2OH,,3.0,3.0,,NP_neg_0; NP_neg2_0; NP_pos_NH3; RP_pos_NH3; RP_neg_0; RP_neg2_0; RP_neg_Na,C13H18O19P2,4
+?,0.0,monolysocardiolipin,,ML,,,10.0,10.0,,NP_neg_0; NP_neg2_0; NP_pos_NH3; RP_pos_NH3; RP_neg_0; RP_neg2_0; RP_neg_Na,C12H19O16P2,3
+?,0.0,dilysocardiolipin,,DL,,,10.0,10.0,,NP_neg_0; NP_neg2_0; NP_pos_NH3; RP_pos_NH3; RP_neg_0; RP_neg2_0; RP_neg_Na,C11H20O15P2,2
+SM,2.0,sphingomyelin,FA,,,d,10.0,10.0,,NP_pos_0; RP_pos_0; NP_pos_Na; RP_pos_Na; NP_neg_HCl; RP_neg_HCl; RP_neg_CH2O2; NP_neg_CH2O2,C7H15N2O6P,2
+SM,3.0,,,,,t,10.0,10.0,,NP_pos_0; RP_pos_0; NP_pos_Na; RP_pos_Na; NP_neg_HCl; RP_neg_HCl; RP_neg_CH2O2; NP_neg_CH2O2,C7H15N2O7P,2
+SM,3.0,,,,_OH,d,5.0,5.0,,NP_pos_0; RP_pos_0; NP_pos_Na; RP_pos_Na; NP_neg_HCl; RP_neg_HCl; RP_neg_CH2O2; NP_neg_CH2O2,C7H15N2O7P,2
+SM,4.0,,,,_2OH,d,5.0,5.0,,NP_pos_0; RP_pos_0; NP_pos_Na; RP_pos_Na; NP_neg_HCl; RP_neg_HCl; RP_neg_CH2O2; NP_neg_CH2O2,C7H15N2O8P,2
+?,0.0,,,3-O-acyl,,d,5.0,5.0,,NP_pos_0; RP_pos_0; NP_pos_Na; RP_pos_Na; NP_neg_HCl; RP_neg_HCl; RP_neg_CH2O2; NP_neg_CH2O2,C8H14N2O7P,3
+Cer,2.0,ceramide,FA,,,d,7.0,10.0,,RP_pos_0; RP_pos_0-H2O; RP_pos_Na; RP_neg_HCl; NP_pos_0; NP_pos_0-H2O; NP_pos_Na; NP_neg_HCl; RP_neg_CH2O2; NP_neg_CH2O2,C2H3NO3,2
+Cer,3.0,phytoceramide,,,,t,5.0,5.0,,RP_pos_0; RP_pos_0-H2O; RP_pos_Na; RP_neg_HCl; NP_pos_0; NP_pos_0-H2O; NP_pos_Na; NP_neg_HCl; RP_neg_CH2O2; NP_neg_CH2O2,C2H3NO4,2
+Cer,1.0,,,,,m,,,,RP_pos_0; RP_pos_0-H2O; RP_pos_Na; RP_neg_HCl; NP_pos_0; NP_pos_0-H2O; NP_pos_Na; NP_neg_HCl; RP_neg_CH2O2; NP_neg_CH2O2,C2H3NO2,2
+Cer,4.0,,,,,q,,,,RP_pos_0; RP_pos_0-H2O; RP_pos_Na; RP_neg_HCl; NP_pos_0; NP_pos_0-H2O; NP_pos_Na; NP_neg_HCl; RP_neg_CH2O2; NP_neg_CH2O2,C2H3NO5,2
+CerP,2.0,ceramide 1-phosphate,FA,,,d,10.0,5.0,,NP_neg_0; NP_pos_0; NP_pos_0-H2O; NP_pos_Na; NP_neg_HCl; NP_neg_CH2O2,C2H4NO6P,2
+CerP,3.0,,,,,t,5.0,5.0,,NP_neg_0; NP_pos_0; NP_pos_0-H2O; NP_pos_Na; NP_neg_HCl; NP_neg_CH2O2,C2H4NO7P,2
+HexCer,2.0,hexosylceramide,FA,,,d,10.0,10.0,,RP_pos_0; RP_pos_0-H2O; RP_pos_Na;  NP_pos_0; NP_pos_0-H2O; NP_pos_Na; NP_neg_HCl; RP_neg_CH2O2; NP_neg_CH2O2,C8H13NO8,2
+HexCer,3.0,,,,,t,10.0,10.0,,RP_pos_0; RP_pos_0-H2O; RP_pos_Na;  NP_pos_0; NP_pos_0-H2O; NP_pos_Na; NP_neg_HCl; RP_neg_CH2O2; NP_neg_CH2O2,C8H13NO9,2
+Hex2Cer,2.0,dihexosylceramide,FA,,,d,10.0,10.0,,RP_pos_0; RP_pos_0-H2O; RP_pos_Na;  NP_pos_0; NP_pos_0-H2O; NP_pos_Na; NP_neg_HCl; RP_neg_CH2O2; NP_neg_CH2O2,C14H23NO13,2
+Hex2Cer,3.0,,,,,t,10.0,10.0,,RP_pos_0; RP_pos_0-H2O; RP_pos_Na;  NP_pos_0; NP_pos_0-H2O; NP_pos_Na; NP_neg_HCl; RP_neg_CH2O2; NP_neg_CH2O2,C14H23NO14,2
+Hex3Cer,2.0,trihexosylceramide,FA,,,d,10.0,10.0,,RP_pos_0; RP_pos_0-H2O; RP_pos_Na;  NP_pos_0; NP_pos_0-H2O; NP_pos_Na; NP_neg_HCl; RP_neg_CH2O2; NP_neg_CH2O2,C20H33NO18,2
+Hex3Cer,3.0,,,,,t,10.0,10.0,,RP_pos_0; RP_pos_0-H2O; RP_pos_Na;  NP_pos_0; NP_pos_0-H2O; NP_pos_Na; NP_neg_HCl; RP_neg_CH2O2; NP_neg_CH2O2,C20H33NO19,2
+SPB,2.0,sphingosine,FA,,,d,10.0,10.0,,RP_pos_0; RP_pos_0-H2O; RP_pos_Na; NP_pos_0; NP_pos_0-H2O,CH4NO2,1
+SPB,3.0,phytosphingosine,,,,t,5.0,5.0,,RP_pos_0; RP_pos_0-H2O; RP_pos_Na; NP_pos_0; NP_pos_0-H2O,CH4NO3,1
+SPB,1.0,,,,,m,5.0,5.0,,RP_pos_0; RP_pos_0-H2O; RP_pos_Na; NP_pos_0; NP_pos_0-H2O,CH4NO,1
+SPBP,2.0,sphingosine 1-phosphate,FA,,,d,10.0,10.0,,NP_neg_0; RP_neg_0; NP_pos_0; RP_pos_0; NP_neg_HCl; RP_neg_HCl,CH5NO5P,1
+SPBP,3.0,,,,,t,5.0,5.0,,NP_neg_0; RP_neg_0; NP_pos_0; RP_pos_0; NP_neg_HCl; RP_neg_HCl,CH5NO6P,1
+CDP-DG,0.0,cytidine diphospho diacylglycerol,FA,,,,,,,NP_neg_0; RP_neg_0,C14H19N3O15P2,2
+MGDG,0.0,monoglycosyl diacylglycerol,FA,,,,,,,NP_pos_NH3; NP_pos_Na; NP_neg_HCl; RP_pos_NH3; RP_pos_Na; RP_neg_HCl,C11H16O10,2
+DGDG,0.0,diglycosyl diacylglycerol,FA,,,,,,,NP_pos_NH3; NP_pos_Na; NP_neg_HCl; RP_pos_NH3; RP_pos_Na; RP_neg_HCl,C17H26O15,2
+FOH,0.0,fatty alcohol,FA,,,,,,,NP_pos_NH3; NP_pos_Na,CH3O,1
+PE-Cer,2.0,,FA,,,d,,,,,C4H9N2O6P,2
+PE-Cer,3.0,,,,,t,,,,,C4H9N2O7P,2
+PI-Cer,2.0,,FA,,,d,,,,,C8H14NO11P,2
+PI-Cer,3.0,,,,,t,,,,,C8H14NO12P,2
+PIP,0.0,,FA,,,,,,,,C11H17O16P2,2
+WE,0.0,wax ester,FA,,,,,,,NP_pos_NH3; NP_pos_Na; RP_pos_NH3; RP_pos_Na; RP_pos_K; RP_pos_0,C2H2O2,2
+SHexCer,2.0,,,,,D,,,,,C8H13NO11S,2
+SHexCer,3.0,,,,,T,,,,,C8H13NO12S,2
