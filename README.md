@@ -11,6 +11,6 @@ rapid large-scale analyses without requiring extensive tandem mass spectrometry 
 acquisition or dependence on lipid databases.
 
 LIPS-IP was developed in Python. However, the mixture models were fitted using the
-flexmix package in R 4.3.2 and the mass decomposer is implemented in C++. Integration of R functionalities within Python was facilitated using the rpy2 library in Python.
+flexmix package in R and the mass decomposer is implemented in C++. Integration of R functionalities within Python was facilitated using the rpy2 library in Python.
 Additionally, C++ executables were invoked using Python’s subprocess module. All code for LIPS-IP, including the theoretical RR, RKMD and headgroup databases, is
 available here. A example LC-MS sample file is available here. It is .mzXML and in centroid mode. All steps performed in LIPS-IP are trackable.
