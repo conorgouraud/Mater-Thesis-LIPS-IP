@@ -17,5 +17,5 @@ available here.
 
 Use the runner file to do a test run of the example LC-MS sample file. The file is .mzXML and in centroid mode. All steps performed in LIPS-IP are trackable.
 
-![image](Figures/LIPS-IP FRAMEWORK.png)
+![image]([Figures/LIPS-IP FRAMEWORK.png](https://github.com/conorgouraud/Mater-Thesis-LIPS-IP/blob/main/Figures/LIPS-IP%20FRAMEWORK.png))
 
