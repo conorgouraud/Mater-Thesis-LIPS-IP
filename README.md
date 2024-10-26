@@ -16,3 +16,5 @@ Additionally, C++ executables were invoked using Python’s subprocess module. A
 available here. 
 
 Use the runner file to do a test run of the example LC-MS sample file. The file is .mzXML and in centroid mode. All steps performed in LIPS-IP are trackable.
+
+![image](Figures/LIPS-IP FRAMEWORK.png)
