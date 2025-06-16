@@ -161,10 +161,8 @@ readRDS = ro.r['readRDS']
 for element, (model_path, has_frac_mass, function) in elements.items():
     print(f"Predicting {element} ranges...")
     
-    # Load the specific model file for the current element
     fModel = readRDS(model_path)
     
-    # Prepare the data frame for prediction
     toPred_dict = {
         'm0': iso_pattern_df['m0'],
         'm21': iso_pattern_df['m21'],
@@ -176,18 +174,13 @@ for element, (model_path, has_frac_mass, function) in elements.items():
 
     toPred = ro.r['data.frame'](**toPred_dict)
     
-    # Use the direct function reference for prediction
     resRR = function(x=toPred, modelOutput=fModel, conf_int=True, conf_level=pred_interval, S=False)
     resRR_df = pandas2ri.rpy2py(resRR)
     
-    # Calculate and integrate minimum and maximum predictions
     resRR_df = calculate_element_min_max(resRR_df, RR_lookup_table, element, pred_interval)
     
-    # Reset indices to prepare for merging
     iso_pattern_df = iso_pattern_df.reset_index(drop=True)
     resRR_df = resRR_df.reset_index(drop=True)
-    
-    # Merge the results into the main data frame
     iso_pattern_df = iso_pattern_df.merge(resRR_df[[f"{element}minpred_{pred_interval}", f"{element}maxpred_{pred_interval}"]], left_index=True, right_index=True)
 
 
